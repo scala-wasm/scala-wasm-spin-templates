@@ -67,5 +67,3 @@ curl -s http://127.0.0.1:3000/todos \
 
 curl -s -X DELETE http://127.0.0.1:3000/todos/1
 ```
-
-Plain text request bodies are accepted for `POST /todos` too.
