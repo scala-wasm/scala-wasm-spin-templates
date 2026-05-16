@@ -1,0 +1,6 @@
+package scala-wasm:{{project-name | kebab_case}};
+
+world todo {
+  import fermyon:spin/sqlite@2.0.0;
+  export wasi:http/incoming-handler@0.2.0;
+}

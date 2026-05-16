@@ -1,0 +1,19 @@
+#:schema https://schemas.spinframework.dev/spin/manifest-v2/latest.json
+
+spin_manifest_version = 2
+
+[application]
+name = "{{project-name | kebab_case}}"
+version = "0.1.0"
+description = "A scala-wasm TODO app using Spin SQLite"
+
+[[trigger.http]]
+route = "/..."
+component = "todo"
+
+[component.todo]
+source = "target/scala-2.13/{{project-name | kebab_case}}-fastopt/main.wasm"
+sqlite_databases = ["default"]
+
+[component.todo.build]
+command = "sbt --client fastLinkJS"

@@ -1,0 +1,4 @@
+manifest_version = "1"
+id = "http-scala-wasm-todo"
+description = "HTTP TODO API using Scala-wasm and Spin SQLite"
+tags = ["scala"]
