@@ -1,0 +1,9 @@
+.bsp/
+.bloop/
+.metals/
+.spin/
+project/project/
+project/target/
+target/
+wit/deps/
+wkg.lock

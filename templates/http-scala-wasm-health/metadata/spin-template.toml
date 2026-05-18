@@ -1,0 +1,4 @@
+manifest_version = "1"
+id = "http-scala-wasm-health"
+description = "HTTP health check API using Scala-wasm"
+tags = ["scala"]
