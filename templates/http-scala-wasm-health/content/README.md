@@ -11,7 +11,6 @@ Spin HTTP health check API built with [scala-wasm](https://github.com/scala-wasm
 - [wkg](https://github.com/bytecodealliance/wasm-pkg-tools)
 - [wac](https://github.com/bytecodealliance/wac) (optional)
 - `wit-bindgen` (requires our [fork](https://github.com/scala-wasm/wit-bindgen))
-  - use `cargo install --git https://github.com/scala-wasm/wit-bindgen --branch scala`
 - `spin` (requires canary)
 
 scala-wasm emits wasm binary with features like GC, exception handling.
