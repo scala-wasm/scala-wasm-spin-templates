@@ -1,14 +1,14 @@
 package spinhealth
 
-import scala.scalajs.WitUtils._
 import scala.scalajs.{wit => wm}
-import scala.scalajs.wasi.http.types._
+import scala.scalajs.wit.unsigned.UByte
+import spinhealth.wasi.http.types._
 import scala.util.control.NonFatal
 
 object ServerHandler {
   def handle(request: IncomingRequest, outParam: ResponseOutparam): Unit = {
     try {
-      val path = normalizePath(toOption(request.pathWithQuery()).getOrElse("/"))
+      val path = normalizePath(request.pathWithQuery().getOrElse("/"))
 
       request.method() match {
         case Method.Get if path == "/health" =>
@@ -24,26 +24,27 @@ object ServerHandler {
 
   private def send(outParam: ResponseOutparam, status: Int,
       contentType: String, responseBody: String): Unit = {
-    val headers = toEither(Fields.fromList(Array(
-        wm.Tuple2("content-type", contentType.getBytes("UTF-8"))))).getOrElse(Fields())
+    val headers = Fields.fromList(Array(
+        wm.Tuple2("content-type", contentType.getBytes().asInstanceOf[Array[UByte]])
+    )).getOrElse(Fields())
     val response = OutgoingResponse(headers)
 
-    toEither(response.setStatusCode(status.toShort)).getOrElse(
-        throw new Error(s"failed to set response status $status"))
+    response.setStatusCode(status.toShort).getOrElse(
+      throw new Error(s"failed to set response status $status"))
 
-    val body = toEither(response.body()).getOrElse(
-        throw new Error("failed to obtain outgoing response body"))
+    val body = response.body().getOrElse(
+      throw new Error("failed to obtain outgoing response body"))
 
     ResponseOutparam.set(outParam, new wm.Ok(response))
 
-    val out = toEither(body.write()).getOrElse(
-        throw new Error("failed to get outgoing stream"))
-    toEither(out.blockingWriteAndFlush(responseBody.getBytes("UTF-8"))).getOrElse(
-        throw new Error("failed to write response body"))
+    val out = body.write().getOrElse(
+      throw new Error("failed to get outgoing stream"))
+    out.blockingWriteAndFlush(responseBody.getBytes().asInstanceOf[Array[UByte]]).getOrElse(
+      throw new Error("failed to write response body"))
 
     out.close()
-    toEither(OutgoingBody.finish(body, java.util.Optional.empty[Trailers]())).getOrElse(
-        throw new Error("failed to finish outgoing body"))
+    OutgoingBody.finish(body, wm.None).getOrElse(
+      throw new Error("failed to finish outgoing body"))
   }
 
   private def normalizePath(pathWithQuery: String): String = {

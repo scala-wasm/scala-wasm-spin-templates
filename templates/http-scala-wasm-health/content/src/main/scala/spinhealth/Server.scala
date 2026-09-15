@@ -1,12 +1,12 @@
 package spinhealth
 
-import scala.scalajs.wasi.http.types._
-import scala.scalajs.wit.annotation._
+import scala.scalajs.wit.annotation.{WitExport, WitName, WitScope}
+import spinhealth.wasi.http.types.{IncomingRequest, ResponseOutparam}
 
-import spinhealth.exports.wasi.http.IncomingHandler
-
-@WitImplementation
-object Server extends IncomingHandler {
-  override def handle(request: IncomingRequest, outParam: ResponseOutparam): Unit =
-    ServerHandler.handle(request, outParam)
+object Server {
+  @WitExport(WitScope("wasi", "http", "incoming-handler", "0.2.0"), "handle")
+  def handle(
+      @WitName("request") request: IncomingRequest,
+      @WitName("response-out") responseOut: ResponseOutparam): Unit =
+    ServerHandler.handle(request, responseOut)
 }
