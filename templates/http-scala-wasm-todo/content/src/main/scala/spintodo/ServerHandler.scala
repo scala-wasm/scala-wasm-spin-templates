@@ -1,9 +1,9 @@
 package spintodo
 
 import scala.collection.mutable
-import scala.scalajs.WitUtils._
 import scala.scalajs.{wit => wm}
-import scala.scalajs.wasi.http.types._
+import scala.scalajs.wit.unsigned.UByte
+import spintodo.wasi.http.v0_2_0.types._
 import scala.util.control.NonFatal
 
 import org.typelevel.jawn.ast.{JBool, JObject, JParser, JValue}
@@ -26,7 +26,7 @@ object ServerHandler {
   }
 
   private def route(request: IncomingRequest): Either[String, JsonResponse] = {
-    val path = normalizePath(toOption(request.pathWithQuery()).getOrElse("/"))
+    val path = normalizePath(request.pathWithQuery().getOrElse("/"))
 
     request.method() match {
       case Method.Get if path == "/" || path == "/todos" =>
@@ -54,18 +54,18 @@ object ServerHandler {
 
   private def readBody(request: IncomingRequest): String = {
     val bytes = (for {
-      body <- toEither(request.consume())
-      inputStream <- toEither(body.stream())
+      body <- request.consume()
+      inputStream <- body.stream()
     } yield {
       val in = mutable.ArrayBuffer.empty[Byte]
       var eof = false
 
       while (!eof) {
-        toEither(inputStream.blockingRead(1024L)) match {
-          case Right(chunk) =>
+        inputStream.blockingRead(1024L) match {
+          case wm.Ok(chunk) =>
             if (chunk.length == 0) eof = true
-            else in ++= chunk
-          case Left(_) =>
+            else in ++= chunk.map(_.toByte)
+          case wm.Err(_) =>
             eof = true
         }
       }
@@ -84,26 +84,27 @@ object ServerHandler {
 
   private def send(outParam: ResponseOutparam, status: Int,
       contentType: String, responseBody: String): Unit = {
-    val headers = toEither(Fields.fromList(Array(
-        wm.Tuple2("content-type", contentType.getBytes("UTF-8"))))).getOrElse(Fields())
+    val headers = Fields.fromList(Array(
+        wm.Tuple2("content-type", contentType.getBytes().asInstanceOf[Array[UByte]])
+    )).getOrElse(Fields())
     val response = OutgoingResponse(headers)
 
-    toEither(response.setStatusCode(status.toShort)).getOrElse(
-        throw new Error(s"failed to set response status $status"))
+    response.setStatusCode(status.toShort).getOrElse(
+      throw new Error(s"failed to set response status $status"))
 
-    val body = toEither(response.body()).getOrElse(
-        throw new Error("failed to obtain outgoing response body"))
+    val body = response.body().getOrElse(
+      throw new Error("failed to obtain outgoing response body"))
 
     ResponseOutparam.set(outParam, new wm.Ok(response))
 
-    val out = toEither(body.write()).getOrElse(
-        throw new Error("failed to get outgoing stream"))
-    toEither(out.blockingWriteAndFlush(responseBody.getBytes("UTF-8"))).getOrElse(
-        throw new Error("failed to write response body"))
+    val out = body.write().getOrElse(
+      throw new Error("failed to get outgoing stream"))
+    out.blockingWriteAndFlush(responseBody.getBytes().asInstanceOf[Array[UByte]]).getOrElse(
+      throw new Error("failed to write response body"))
 
     out.close()
-    toEither(OutgoingBody.finish(body, java.util.Optional.empty[Trailers]())).getOrElse(
-        throw new Error("failed to finish outgoing body"))
+    OutgoingBody.finish(body, wm.None).getOrElse(
+      throw new Error("failed to finish outgoing body"))
   }
 
   private def normalizePath(pathWithQuery: String): String = {

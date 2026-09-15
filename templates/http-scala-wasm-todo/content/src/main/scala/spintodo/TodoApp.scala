@@ -1,6 +1,5 @@
 package spintodo
 
-import scala.scalajs.WitUtils._
 import scala.scalajs.{wit => wm}
 
 import org.typelevel.jawn.ast.{JArray, JBool, JNum, JObject, JString, JValue}
@@ -49,7 +48,10 @@ object TodoApp {
     unwrap(conn.execute(statement, parameters))
 
   private def unwrap[A](result: wm.Result[A, sqlite.Error]): Either[String, A] =
-    toEither(result).left.map(err => s"sqlite error: $err")
+    result match {
+      case wm.Ok(value) => Right(value)
+      case wm.Err(err)  => Left(s"sqlite error: $err")
+    }
 
   private def rowsToTodos(rows: Array[sqlite.RowResult]): Either[String, Array[Todo]] = {
     val todos = new Array[Todo](rows.length)
